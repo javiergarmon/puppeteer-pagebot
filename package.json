@@ -1,0 +1,24 @@
+{
+  "name": "puppeteer-pagebot",
+  "version": "0.0.0",
+  "description": "Simple Puppeteer actions wrapper",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Javier Garmon",
+    "url": "https://github.com/javiergarmon"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/javiergarmon/puppeteer-pagebot"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "3.5.5",
+    "puppeteer": "1.17.0",
+    "puppeteer-extra": "2.1.3",
+    "puppeteer-extra-plugin-stealth": "2.2.2"
+  }
+}
