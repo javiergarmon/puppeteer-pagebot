@@ -62,7 +62,7 @@ class PageBot {
     return this.page.$(selector)
   }
 
-  async waitItem(selector, options = {}) {
+  async waitForItem(selector, options = {}) {
     const interval = options.interval || PageBot.DEFAULT_WAITITEM_CONFIG.interval
     const timeout = options.timeout || PageBot.DEFAULT_WAITITEM_CONFIG.timeout
     const start = Date.now()
@@ -74,6 +74,13 @@ class PageBot {
     }
 
     throw new Error('Timeout')
+  }
+
+  async waitForNavigation(options = {}) {
+    const timeout = options.timeout || 0
+    const waitUntil = options.waitForNavigation || 'networkidle2'
+
+    await this.page.waitForNavigation({ timeout, waitUntil })
   }
 
   static get DEFAULT_BROWSER_CONFIG() {
