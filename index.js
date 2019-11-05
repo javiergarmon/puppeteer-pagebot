@@ -10,8 +10,8 @@ const randomFloatBetween = (min, max, divisor = 100) => randomBetween(min * divi
 
 const getCoordinatesToClick = rect => {
   const { x, y, width, height } = rect
-  let pointX = x + width * randomFloatBetween(0.2, 0.8)
-  let pointY = y + height * randomFloatBetween(0.2, 0.8)
+  const pointX = x + width * randomFloatBetween(0.2, 0.8)
+  const pointY = y + height * randomFloatBetween(0.2, 0.8)
   return { x: pointX, y: pointY }
 }
 
@@ -19,6 +19,7 @@ class PageBot {
   constructor() {
     this.browser = null
     this.page = null
+    this.userSpeed = null
   }
 
   async start(url, options = {}) {
@@ -28,6 +29,7 @@ class PageBot {
     const pageOptions = options.page || PageBot.DEFAULT_PAGE_CONFIG
     this.browser = await puppeteer.launch(browserOptions)
     this.page = await this.browser.newPage(browserOptions)
+    this.userSpeed = PageBot.DEFAULT_SPEED[options.userSpeed] ? options.userSpeed : 'slow'
     await this.page.goto(url, pageOptions)
   }
 
@@ -35,9 +37,17 @@ class PageBot {
     await this.browser.close()
   }
 
+  async getItemText(selector) {
+    return this.page.evaluate(`Array.from(document.querySelector('${selector}'), element => element.textContent)`)
+  }
+
+  async getItemsText(selector) {
+    return this.page.evaluate(`Array.from(document.querySelectorAll('${selector}'), element => element.textContent)`)
+  }
+
   async click(selector, options = {}) {
-    const pressTime = options.pressTime || PageBot.DEFAULT_CLICK_CONFIG.pressTime
-    const delay = options.delay || PageBot.DEFAULT_CLICK_CONFIG.delay
+    const pressTime = options.pressTime || PageBot.getClickConfig(this.userSpeed).pressTime
+    const delay = options.delay || PageBot.getClickConfig(this.userSpeed).delay
     const item = await this.page.$(selector)
     const rect = await this.page.evaluate(item => JSON.parse(JSON.stringify(item.getBoundingClientRect())), item)
     const point = getCoordinatesToClick(rect)
@@ -47,8 +57,8 @@ class PageBot {
   }
 
   async type(text, options = {}) {
-    const pressTime = options.pressTime || PageBot.DEFAULT_TYPE_CONFIG.pressTime
-    const delay = options.delay || PageBot.DEFAULT_TYPE_CONFIG.delay
+    const pressTime = options.pressTime || PageBot.getTypeConfig(this.userSpeed).pressTime
+    const delay = options.delay || PageBot.getTypeConfig(this.userSpeed).delay
 
     await Promise.delay(typeof delay === 'function' ? delay() : delay)
 
@@ -91,12 +101,35 @@ class PageBot {
     return { waitUntil: 'networkidle2' }
   }
 
-  static get DEFAULT_TYPE_CONFIG() {
-    return { delay: () => randomBetween(40, 160), pressTime: () => randomFloatBetween(30, 90) }
+  static get DEFAULT_SPEED() {
+    return {
+      fast: {
+        delay: [10, 40],
+        pressTime: [10, 30]
+      },
+      slow: {
+        delay: [40, 160],
+        pressTime: [30, 90]
+      }
+    }
   }
 
-  static get DEFAULT_CLICK_CONFIG() {
-    return { delay: () => randomBetween(40, 160), pressTime: () => randomFloatBetween(30, 90) }
+  static getTypeConfig(type) {
+    type = PageBot.DEFAULT_SPEED[type] ? type : 'slow'
+
+    return {
+      delay: randomBetween.apply(null, PageBot.DEFAULT_SPEED[type].delay),
+      pressTime: randomFloatBetween.apply(null, PageBot.DEFAULT_SPEED[type].pressTime)
+    }
+  }
+
+  static getClickConfig(type) {
+    type = PageBot.DEFAULT_SPEED[type] ? type : 'slow'
+
+    return {
+      delay: randomBetween.apply(null, PageBot.DEFAULT_SPEED[type].delay),
+      pressTime: randomFloatBetween.apply(null, PageBot.DEFAULT_SPEED[type].pressTime)
+    }
   }
 
   static get DEFAULT_WAITITEM_CONFIG() {
